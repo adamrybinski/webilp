@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebILP — browser induction</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/clingo-wasm@0.3.2/dist/clingo.web.js"></script>
+</head>
+<body>
+  <header>
+    <h1>WebILP</h1>
+    <p class="tagline">Popper-style induction in the browser — Clingo WASM + Trealla Prolog</p>
+    <div id="status" data-kind="info">Starting…</div>
+  </header>
+
+  <main>
+    <section class="toolbar">
+      <label class="btn">
+        Import layer folder
+        <input type="file" id="importLayer" webkitdirectory multiple hidden>
+      </label>
+      <select id="exampleSelect" aria-label="Load example">
+        <option value="">Load example…</option>
+        <option value="grandparent-maternal">grandparent-maternal (single clause)</option>
+        <option value="kinship-pi">kinship-pi (multi-clause; needs Popper CLI)</option>
+      </select>
+      <label>
+        Max models
+        <input type="number" id="maxModels" value="200" min="1" max="5000" style="width:5rem">
+      </label>
+      <button type="button" id="btnValidate">Validate exs</button>
+      <button type="button" id="btnEncoding">Build encoding</button>
+      <button type="button" id="btnInduce" class="primary">Induce</button>
+      <button type="button" id="btnClear">Clear</button>
+    </section>
+
+    <div class="editors">
+      <article class="panel">
+        <header>
+          <h2>bk.pl</h2>
+          <label class="btn small">
+            Import
+            <input type="file" id="importBk" accept=".pl,.txt" hidden>
+          </label>
+        </header>
+        <textarea id="bk" spellcheck="false" placeholder="Background knowledge…"></textarea>
+      </article>
+
+      <article class="panel">
+        <header>
+          <h2>bias.pl</h2>
+          <label class="btn small">
+            Import
+            <input type="file" id="importBias" accept=".pl,.txt" hidden>
+          </label>
+        </header>
+        <textarea id="bias" spellcheck="false" placeholder="head_pred, body_pred, max_* …"></textarea>
+      </article>
+
+      <article class="panel">
+        <header>
+          <h2>exs.pl</h2>
+          <label class="btn small">
+            Import
+            <input type="file" id="importExs" accept=".pl,.txt" hidden>
+          </label>
+        </header>
+        <textarea id="exs" spellcheck="false" placeholder="pos(…). neg(…)."></textarea>
+      </article>
+    </div>
+
+    <section class="panel wide">
+      <header><h2>Alan → Clingo encoding</h2></header>
+      <textarea id="encoding" spellcheck="false" readonly placeholder="Generated ASP encoding appears here…"></textarea>
+    </section>
+
+    <section class="panel wide">
+      <header><h2>Output</h2></header>
+      <pre id="output"></pre>
+    </section>
+  </main>
+
+  <footer>
+  <p>
+    Uses Popper&apos;s <code>alan.pl</code> program generator with
+    <a href="https://github.com/domoritz/clingo-wasm">clingo-wasm</a> and
+    <a href="https://github.com/guregu/trealla-js">Trealla</a>.
+    Single-clause search in-browser; <code>enable_pi</code>, <code>enable_recursion</code>, and
+    <code>max_clauses &gt; 1</code> need full <a href="https://github.com/logic-and-learning-lab/Popper">Popper</a> locally.
+  </p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
