@@ -1,0 +1,16 @@
+#
+# Cloudflare Pages — WebILP browser app
+#
+# Project:  webilp
+# Domain:   app.livelogic.dev  (custom domain; add once zone is on Cloudflare)
+#
+# Deploy:
+#   cd /Users/adam/apps/webilp
+#   wrangler pages deploy . --project-name webilp --branch main
+#
+# Static site: index.html + js/ + css/ + vendor/ + examples/
+# No build step. node_modules/ is gitignored and not uploaded.
+#
+
+name = "webilp"
+pages_build_output_dir = "."

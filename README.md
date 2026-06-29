@@ -11,6 +11,32 @@ npm start
 
 Open http://localhost:3000 (or whatever `serve` prints). Use **Load example → grandparent-maternal**, then **Induce**.
 
+## Deploy (Cloudflare Pages)
+
+Static app — no backend. LLM keys stay in the browser; Clingo WASM and Trealla load from CDN.
+
+```bash
+# first time only
+wrangler pages project create webilp --production-branch main
+
+# deploy
+wrangler pages deploy . --project-name webilp --branch main
+```
+
+- **Production URL**: https://webilp.pages.dev
+- **Custom domain** (once added in Cloudflare): https://app.livelogic.dev
+
+`wrangler.toml` and `.assetsignore` are in the repo root. `node_modules/` is not uploaded.
+
+### Custom domain `app.livelogic.dev`
+
+`livelogic.dev` is on Cloudflare. In the dashboard:
+
+1. **Workers & Pages** → **webilp** → **Custom domains** → add `app.livelogic.dev`
+2. Cloudflare will create the DNS record (CNAME to `webilp.pages.dev`) if the zone is on the same account.
+
+Or via API: `POST /accounts/{account_id}/pages/projects/webilp/domains` with body `{"name":"app.livelogic.dev"}`.
+
 ## Workflow
 
 1. Paste or **import** Popper layer files: `bk.pl`, `bias.pl`, `exs.pl`

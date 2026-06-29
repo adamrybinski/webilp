@@ -1,0 +1,8 @@
+node_modules/
+scripts/
+.git/
+.gitignore
+package-lock.json
+README.md
+wrangler.toml
+.assetsignore
