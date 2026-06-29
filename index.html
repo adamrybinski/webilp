@@ -10,85 +10,263 @@
 <body>
   <header>
     <h1>WebILP</h1>
-    <p class="tagline">Popper-style induction in the browser — Clingo WASM + Trealla Prolog</p>
+    <p class="tagline">LLM grounding → human review → Clingo + Trealla induction</p>
     <div id="status" data-kind="info">Starting…</div>
+    <div id="busyIndicator" class="busy-indicator" hidden>
+      <span class="busy-spinner" aria-hidden="true"></span>
+      <span id="busyLabel">Working…</span>
+      <span id="busyElapsed" class="busy-elapsed">0s</span>
+    </div>
   </header>
 
   <main>
-    <section class="toolbar">
-      <label class="btn">
-        Import layer folder
-        <input type="file" id="importLayer" webkitdirectory multiple hidden>
-      </label>
-      <select id="exampleSelect" aria-label="Load example">
-        <option value="">Load example…</option>
-        <option value="grandparent-maternal">grandparent-maternal (single clause)</option>
-        <option value="kinship-pi">kinship-pi (multi-clause; needs Popper CLI)</option>
-      </select>
-      <label>
-        Max models
-        <input type="number" id="maxModels" value="200" min="1" max="5000" style="width:5rem">
-      </label>
-      <button type="button" id="btnValidate">Validate exs</button>
-      <button type="button" id="btnEncoding">Build encoding</button>
-      <button type="button" id="btnInduce" class="primary">Induce</button>
-      <button type="button" id="btnClear">Clear</button>
-    </section>
-
-    <div class="editors">
-      <article class="panel">
-        <header>
-          <h2>bk.pl</h2>
-          <label class="btn small">
-            Import
-            <input type="file" id="importBk" accept=".pl,.txt" hidden>
+    <details class="panel wide setup-panel">
+      <summary>
+        <span class="setup-chevron" aria-hidden="true">›</span>
+        <h2>Setup (import &amp; LLM key)</h2>
+      </summary>
+      <div class="setup-body">
+        <div class="toolbar">
+          <label class="btn">
+            Import layer folder
+            <input type="file" id="importLayer" webkitdirectory multiple hidden>
           </label>
-        </header>
-        <textarea id="bk" spellcheck="false" placeholder="Background knowledge…"></textarea>
-      </article>
-
-      <article class="panel">
-        <header>
-          <h2>bias.pl</h2>
-          <label class="btn small">
-            Import
-            <input type="file" id="importBias" accept=".pl,.txt" hidden>
+          <select id="exampleSelect" aria-label="Load Popper example">
+            <option value="">Load Popper example…</option>
+            <option value="grandparent-maternal">grandparent-maternal (single clause)</option>
+            <option value="kinship-pi">kinship-pi (multi-clause; needs Popper CLI)</option>
+          </select>
+          <label>
+            Max models
+            <input type="number" id="maxModels" value="200" min="1" max="5000" style="width:5rem">
           </label>
-        </header>
-        <textarea id="bias" spellcheck="false" placeholder="head_pred, body_pred, max_* …"></textarea>
-      </article>
-
-      <article class="panel">
-        <header>
-          <h2>exs.pl</h2>
-          <label class="btn small">
-            Import
-            <input type="file" id="importExs" accept=".pl,.txt" hidden>
+          <button type="button" id="btnClear">Clear all</button>
+        </div>
+        <div class="settings-grid">
+          <label>
+            LLM preset
+            <select id="llmPreset"></select>
           </label>
-        </header>
-        <textarea id="exs" spellcheck="false" placeholder="pos(…). neg(…)."></textarea>
-      </article>
-    </div>
+          <label>
+            Base URL
+            <input type="url" id="llmBaseUrl" placeholder="https://openrouter.ai/api/v1" spellcheck="false">
+          </label>
+          <label>
+            Model
+            <input type="text" id="llmModel" placeholder="google/gemma-2-9b-it:free" spellcheck="false">
+          </label>
+          <label>
+            API key
+            <input type="password" id="llmApiKey" placeholder="sk-or-…" autocomplete="off">
+          </label>
+        </div>
+        <div class="toolbar settings-actions">
+          <button type="button" id="btnLlmSave">Save LLM settings</button>
+          <button type="button" id="btnLlmTest">Test connection</button>
+          <span id="llmSettingsStatus" class="inline-status"></span>
+        </div>
+        <p class="hint">Key stays in browser storage only. Default: OpenRouter + Gemma 2 9B free.</p>
+      </div>
+    </details>
 
-    <section class="panel wide">
-      <header><h2>Alan → Clingo encoding</h2></header>
-      <textarea id="encoding" spellcheck="false" readonly placeholder="Generated ASP encoding appears here…"></textarea>
-    </section>
+  <section class="flow" aria-label="Induction workflow">
+    <p class="flow-intro">
+      Follow the arrows: <strong>ground</strong> facts and examples with the LLM,
+      <strong>review</strong> and give feedback, then <strong>induce</strong> a rule with Clingo + Trealla.
+      Loop back anytime to refine or add examples.
+    </p>
 
-    <section class="panel wide">
-      <header><h2>Output</h2></header>
-      <pre id="output"></pre>
-    </section>
+    <!-- STEP 1: SOURCE -->
+    <article class="flow-step" data-step="1">
+      <header class="flow-step-head">
+        <span class="flow-badge">1</span>
+        <div>
+          <h2>Source</h2>
+          <p class="flow-desc">Prose, rules, or domain description — what you want to learn from.</p>
+        </div>
+      </header>
+      <div class="flow-step-body">
+        <label class="stack-label">
+          Source text
+          <textarea id="assistSource" spellcheck="false" placeholder="Paste prose or describe the relation you want to learn…"></textarea>
+        </label>
+        <select id="sourceTextSelect" class="flow-select" aria-label="Load source text example">
+          <option value="">Load prose example…</option>
+        </select>
+      </div>
+    </article>
+
+    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+    <!-- STEP 2: GROUND (LLM) -->
+    <article class="flow-step" data-step="2">
+      <header class="flow-step-head">
+        <span class="flow-badge">2</span>
+        <div>
+          <h2>Ground with LLM</h2>
+          <p class="flow-desc">Turn prose into Popper files. Pick one path — or both.</p>
+        </div>
+      </header>
+      <div class="flow-step-body">
+        <div class="flow-branch">
+          <div class="flow-node">
+            <button type="button" id="btnDraftLayer" class="flow-btn" title="LLM writes bk + bias + exs from source">
+              Draft layer
+            </button>
+            <p class="flow-node-hint">
+              <strong>Use when</strong> starting fresh. LLM writes all three files:
+              facts (<code>bk</code>), search space (<code>bias</code>), supervision (<code>exs</code>).
+            </p>
+          </div>
+          <span class="flow-or">or</span>
+          <div class="flow-node">
+            <button type="button" id="btnExtractBk" class="flow-btn" title="LLM extracts ASP facts; Clingo verifies merge into bk">
+              Extract facts → bk
+            </button>
+            <p class="flow-node-hint">
+              <strong>Use when</strong> you already have <code>bias</code>/<code>exs</code> and only need
+              more background facts. Clingo checks the merge does not contradict existing <code>bk</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <details class="flow-connector" id="groundConnector" data-status="idle">
+      <summary>
+        <span class="flow-connector-icon" aria-hidden="true">
+          <span class="fci fci-idle">↓</span>
+          <span class="fci fci-spin" hidden></span>
+          <span class="fci fci-ok" hidden>✓</span>
+          <span class="fci fci-err" hidden>✕</span>
+        </span>
+        <span id="groundConnectorLabel">Run a grounding step to continue</span>
+        <span id="groundConnectorMeta" class="flow-connector-meta">click to expand</span>
+      </summary>
+      <pre id="groundConnectorLog" class="flow-connector-log">No grounding run yet.</pre>
+    </details>
+
+    <!-- STEP 3: REVIEW (human in the loop) -->
+    <article class="flow-step flow-step-wide" data-step="3">
+      <header class="flow-step-head">
+        <span class="flow-badge">3</span>
+        <div>
+          <h2>Review &amp; human feedback</h2>
+          <p class="flow-desc">Edit files directly, or tell the LLM what to fix. Suggest more examples before inducing.</p>
+        </div>
+      </header>
+      <div class="flow-step-body">
+        <div class="editors">
+          <article class="panel editor-panel">
+            <header>
+              <h3>bk.pl</h3>
+              <label class="btn small">
+                Import
+                <input type="file" id="importBk" accept=".pl,.txt" hidden>
+              </label>
+            </header>
+            <textarea id="bk" spellcheck="false" placeholder="Background knowledge…"></textarea>
+          </article>
+          <article class="panel editor-panel">
+            <header>
+              <h3>bias.pl</h3>
+              <label class="btn small">
+                Import
+                <input type="file" id="importBias" accept=".pl,.txt" hidden>
+              </label>
+            </header>
+            <textarea id="bias" spellcheck="false" placeholder="head_pred, body_pred, max_* …"></textarea>
+          </article>
+          <article class="panel editor-panel">
+            <header>
+              <h3>exs.pl</h3>
+              <label class="btn small">
+                Import
+                <input type="file" id="importExs" accept=".pl,.txt" hidden>
+              </label>
+            </header>
+            <textarea id="exs" spellcheck="false" placeholder="pos(…). neg(…)."></textarea>
+          </article>
+        </div>
+
+        <label class="stack-label feedback-label">
+          Your feedback for the LLM
+          <textarea id="humanFeedback" spellcheck="false" placeholder="e.g. add a neg example for steve, remove duplicate mother facts, change head to ancestor…"></textarea>
+        </label>
+
+        <div class="flow-loop">
+          <div class="flow-loop-row">
+            <button type="button" id="btnRefineFeedback" class="flow-btn" title="LLM revises bk, bias, exs from your feedback">
+              ↺ Refine from feedback
+            </button>
+            <span class="flow-loop-arrow" aria-hidden="true">→ back to editors</span>
+          </div>
+          <div class="flow-loop-row">
+            <button type="button" id="btnSuggestExs" class="flow-btn" title="LLM appends pos/neg lines to exs">
+              + Suggest more examples
+            </button>
+            <span class="flow-loop-arrow" aria-hidden="true">→ appends to exs</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+    <!-- STEP 4: INDUCE (symbolic) -->
+    <article class="flow-step" data-step="4">
+      <header class="flow-step-head">
+        <span class="flow-badge">4</span>
+        <div>
+          <h2>Induce (symbolic)</h2>
+          <p class="flow-desc">Validate supervision, then search for a rule with Clingo WASM + Trealla.</p>
+        </div>
+      </header>
+      <div class="flow-step-body">
+        <div class="flow-pipeline">
+          <button type="button" id="btnValidate" class="flow-btn" title="Count pos/neg examples loadable from exs">
+            Validate exs
+          </button>
+          <span class="flow-pipe-arrow" aria-hidden="true">→</span>
+          <button type="button" id="btnInduce" class="flow-btn primary" title="Alan encoding + Clingo models + Trealla coverage">
+            Induce rule
+          </button>
+        </div>
+        <details class="flow-advanced">
+          <summary>Advanced: preview Alan → Clingo encoding</summary>
+          <button type="button" id="btnEncoding" class="flow-btn small">Build encoding</button>
+          <textarea id="encoding" spellcheck="false" readonly placeholder="Generated ASP encoding…"></textarea>
+        </details>
+      </div>
+    </article>
+
+    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+    <!-- STEP 5: RESULT -->
+    <article class="flow-step" data-step="5">
+      <header class="flow-step-head">
+        <span class="flow-badge">5</span>
+        <div>
+          <h2>Result &amp; pin to knowledge</h2>
+          <p class="flow-desc">Learned rule and coverage. Add it to <code>bk</code> to reuse in the next round.</p>
+        </div>
+      </header>
+      <div class="flow-step-body">
+        <pre id="output" class="flow-output"></pre>
+        <button type="button" id="btnAddToKnowledge" class="flow-btn accent" disabled title="Append last induced rule to bk.pl">
+          ⊕ Add learned rule to bk
+        </button>
+      </div>
+    </article>
+  </section>
   </main>
 
   <footer>
-  <p>
-    Uses Popper&apos;s <code>alan.pl</code> program generator with
-    <a href="https://github.com/domoritz/clingo-wasm">clingo-wasm</a> and
-    <a href="https://github.com/guregu/trealla-js">Trealla</a>.
-    Single-clause search in-browser; <code>enable_pi</code>, <code>enable_recursion</code>, and
-    <code>max_clauses &gt; 1</code> need full <a href="https://github.com/logic-and-learning-lab/Popper">Popper</a> locally.
-  </p>
+    <p>
+      <strong>Induction:</strong> Popper <code>alan.pl</code> + Clingo WASM + Trealla.
+      <strong>LLM:</strong> OpenAI-compatible API (LiveKnowledge-style verify on extract).
+      Human-in-the-loop: refine → validate → induce → pin → repeat.
+    </p>
   </footer>
 
   <script type="module" src="js/app.js"></script>

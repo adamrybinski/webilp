@@ -52,3 +52,15 @@ export async function loadExample(name) {
   ]);
   return { bk, bias, exs };
 }
+
+/** @type {{ id: string, label: string }[]} */
+export const SOURCE_TEXT_EXAMPLES = [
+  { id: 'kinship-maternal', label: 'Kinship — maternal grandparent' },
+  { id: 'kinship-royal', label: 'Kinship — royal family' },
+  { id: 'craft-economy', label: 'Craft economy (LiveKnowledge)' },
+];
+
+/** @param {string} id stem under examples/source-texts/ */
+export async function loadSourceText(id) {
+  return fetchPl(`examples/source-texts/${id}.txt`);
+}

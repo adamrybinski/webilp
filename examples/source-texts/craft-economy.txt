@@ -1,0 +1,12 @@
+Artisan crafting notes (LiveKnowledge-style domain).
+
+The guild tracks which items can be crafted from which materials.
+Iron ore and coal are required to smelt iron bars.
+Iron bars and leather are required to craft iron daggers.
+Herbalists brew healing potions from moonflower and spring water.
+
+Profit on an item depends on sell price minus material cost. Iron daggers sell for 45–60 gold; material cost is about 20 gold. Healing potions sell for 12–18 gold; herbs cost 3 gold.
+
+Demand cycles: iron weapons sell better in winter (cycle winter). Potions sell better after raids (cycle raid_recovery).
+
+We store facts as item/1, material/2, recipe/2 (item, required_material), profit/3 (item, low_gold, high_gold), demand_cycle/1.

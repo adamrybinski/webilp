@@ -1,0 +1,17 @@
+Royal kinship (Popper kinship-pi style).
+
+Queen Victoria was mother of Edward VII.
+Queen Mother was mother of Elizabeth II.
+Elizabeth II was mother of Prince Charles.
+Princess Diana was mother of Prince William and Prince Harry.
+Edward VII was father of George V.
+George V was father of George VI.
+George VI was father of Elizabeth II.
+Prince Philip was father of Prince Charles.
+Prince Charles is father of Prince William and Prince Harry.
+Prince William is father of Prince George.
+
+A person X is an ancestor of Y if X is a parent (mother or father) of Y, or if X is an ancestor of some Z and Z is a parent of Y. For this exercise we only need grandparent: X is grandparent of Y when X is parent of some P and P is parent of Y.
+
+Positive examples: Elizabeth II is grandparent of Prince Charles; George VI is grandparent of Prince William; Queen Mother is grandparent of Prince William.
+Negative: Princess Diana is not grandparent of Prince William (she is his mother, not grandmother in the wrong direction for a single mother/father chain — actually Diana is mother of William so Diana is NOT grandparent of William).

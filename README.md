@@ -18,6 +18,31 @@ Open http://localhost:3000 (or whatever `serve` prints). Use **Load example → 
 3. **Induce** — Clingo enumerates candidate rules; Trealla tests them on your examples
 4. **Build encoding** — preview the full Alan → ASP program sent to Clingo
 
+## LLM assist (LiveKnowledge browser path)
+
+Configure **LLM settings** at the top of the page:
+
+| Preset | Base URL | Model |
+|--------|----------|-------|
+| OpenRouter free (default) | `https://openrouter.ai/api/v1` | `openrouter/free` |
+| OpenRouter Gemma free | same | `google/gemma-2-9b-it:free` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+| Custom | your gateway | your model slug |
+
+**Free models:** OpenRouter’s `openrouter/free` router picks a free model automatically. You still need an API key ([openrouter.ai/keys](https://openrouter.ai/keys)) — inference is free, not keyless. OpenRouter supports browser CORS.
+
+Settings (including API key) are stored in **localStorage** only — never sent anywhere except your chosen API endpoint.
+
+### Assist actions
+
+Source text examples (dropdown in **LLM assist**): `kinship-maternal`, `kinship-royal`, `craft-economy` under `examples/source-texts/`.
+
+1. **Draft Popper layer** — LLM fills `bk.pl`, `bias.pl`, `exs.pl` from a domain description → **Induce**
+2. **Extract facts → bk** — LiveKnowledge-style: LLM proposes ASP, Clingo WASM verifies `bk ⊕ candidate` is satisfiable, then merges into bk
+3. **Suggest more examples** — LLM appends `pos`/`neg` to `exs.pl`
+
+This mirrors LiveKnowledge v2.1 (`generate_knowledge` + `verify_candidate_knowledge`) in the browser, then adds Popper induction on top.
+
 ## Browser limits
 
 | Feature | In browser | Full Popper CLI |

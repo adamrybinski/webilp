@@ -1,0 +1,9 @@
+Family records for the Windsor line (simplified).
+
+Ann is the mother of Amy and Andy.
+Amy is the mother of Amelia.
+Steve is the father of Amy and Andy — so Steve is Amelia's grandfather on the father's side, but we are not learning that rule yet.
+
+We want to learn when someone is a grandparent through the mother's line only: Ann is a grandparent of Amelia because Ann is Amy's mother and Amy is Amelia's mother. Steve is not a maternal grandparent of Amelia (he is father of Amy, not mother).
+
+Use predicate names mother/2 and grandparent/2. Constants are lowercase atoms (ann, amy, amelia, steve, andy).
