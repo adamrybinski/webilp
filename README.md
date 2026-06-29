@@ -30,12 +30,15 @@ wrangler pages deploy . --project-name webilp --branch main
 
 ### Custom domain `app.livelogic.dev`
 
-`livelogic.dev` is on Cloudflare. In the dashboard:
+`livelogic.dev` is on Cloudflare. Custom domain is registered on the **webilp** Pages project.
 
-1. **Workers & Pages** → **webilp** → **Custom domains** → add `app.livelogic.dev`
-2. Cloudflare will create the DNS record (CNAME to `webilp.pages.dev`) if the zone is on the same account.
+If status is `pending` / “CNAME record not set”, add in **DNS** for `livelogic.dev`:
 
-Or via API: `POST /accounts/{account_id}/pages/projects/webilp/domains` with body `{"name":"app.livelogic.dev"}`.
+| Type  | Name | Content           | Proxy |
+|-------|------|-------------------|-------|
+| CNAME | app  | `webilp.pages.dev` | ON    |
+
+Then in **Workers & Pages → webilp → Custom domains**, confirm `app.livelogic.dev` is active.
 
 ## Workflow
 
