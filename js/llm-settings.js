@@ -2,17 +2,17 @@
 
 export const LLM_PRESETS = /** @type {LlmPreset[]} */ ([
   {
-    id: 'openrouter_gemma',
-    label: 'OpenRouter — Gemma 2 9B (free, recommended)',
+    id: 'openrouter_free',
+    label: 'OpenRouter — free router',
     baseUrl: 'https://openrouter.ai/api/v1',
-    model: 'google/gemma-2-9b-it:free',
+    model: 'openrouter/free',
     helpUrl: 'https://openrouter.ai/keys',
   },
   {
-    id: 'openrouter_free',
-    label: 'OpenRouter — free router (may be flaky)',
+    id: 'openrouter_gemma',
+    label: 'OpenRouter — Gemma 2 9B (free)',
     baseUrl: 'https://openrouter.ai/api/v1',
-    model: 'openrouter/free',
+    model: 'google/gemma-2-9b-it:free',
     helpUrl: 'https://openrouter.ai/keys',
   },
   {
@@ -31,8 +31,9 @@ export const LLM_PRESETS = /** @type {LlmPreset[]} */ ([
 ]);
 
 const STORAGE_KEY = 'webilp_llm_config';
+const CONFIG_VERSION = 2;
 
-/** @typedef {{ presetId: string, baseUrl: string, model: string, apiKey: string }} LlmConfig */
+/** @typedef {{ presetId: string, baseUrl: string, model: string, apiKey: string, configVersion?: number }} LlmConfig */
 
 /** @returns {LlmConfig} */
 export function defaultConfig() {
@@ -42,6 +43,7 @@ export function defaultConfig() {
     baseUrl: p.baseUrl,
     model: p.model,
     apiKey: '',
+    configVersion: CONFIG_VERSION,
   };
 }
 
@@ -51,7 +53,21 @@ export function loadLlmConfig() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultConfig();
     const parsed = JSON.parse(raw);
-    return { ...defaultConfig(), ...parsed };
+    const config = { ...defaultConfig(), ...parsed };
+
+    // One-time: old builds defaulted to Gemma; switch to openrouter/free.
+    if ((config.configVersion ?? 1) < CONFIG_VERSION) {
+      if (config.presetId === 'openrouter_gemma') {
+        const free = LLM_PRESETS[0];
+        config.presetId = free.id;
+        config.baseUrl = free.baseUrl;
+        config.model = free.model;
+      }
+      config.configVersion = CONFIG_VERSION;
+      saveLlmConfig(config);
+    }
+
+    return config;
   } catch {
     return defaultConfig();
   }

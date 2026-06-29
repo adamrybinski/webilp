@@ -9,6 +9,7 @@ import {
   loadLlmConfig,
   saveLlmConfig,
   configFromPreset,
+  presetById,
 } from './llm-settings.js';
 import { testLlmConnection } from './llm.js';
 import {
@@ -258,9 +259,13 @@ function populateLlmForm(config) {
   presetSelect.innerHTML = LLM_PRESETS.map(
     (p) => `<option value="${p.id}">${p.label}</option>`,
   ).join('');
-  presetSelect.value = config.presetId || LLM_PRESETS[0].id;
-  $('llmBaseUrl').value = config.baseUrl ?? '';
-  $('llmModel').value = config.model ?? '';
+  const presetId = LLM_PRESETS.some((p) => p.id === config.presetId)
+    ? config.presetId
+    : LLM_PRESETS[0].id;
+  presetSelect.value = presetId;
+  const preset = presetById(presetId);
+  $('llmBaseUrl').value = config.baseUrl ?? preset?.baseUrl ?? '';
+  $('llmModel').value = config.model ?? preset?.model ?? '';
   $('llmApiKey').value = config.apiKey ?? '';
 }
 

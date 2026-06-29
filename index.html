@@ -3,14 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebILP — browser induction</title>
+  <title>LiveKnowledge — WebILP browser app</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/clingo-wasm@0.3.2/dist/clingo.web.js"></script>
 </head>
 <body>
   <header>
-    <h1>WebILP</h1>
-    <p class="tagline">LLM grounding → human review → Clingo + Trealla induction</p>
+    <h1>LiveKnowledge</h1>
+    <p class="tagline">
+      Browser induction app (<strong>WebILP</strong>) — LLM grounding, human review, then Clingo + Trealla.
+      Read the series:
+      <a href="https://adamrybinski.com/blog/liveknowledge/">Part 1 — Architecture</a>
+      ·
+      <a href="https://adamrybinski.com/blog/liveknowledge-part2/">Part 2 — WebILP in the browser</a>.
+    </p>
     <div id="status" data-kind="info">Starting…</div>
     <div id="busyIndicator" class="busy-indicator" hidden>
       <span class="busy-spinner" aria-hidden="true"></span>
@@ -53,7 +59,7 @@
           </label>
           <label>
             Model
-            <input type="text" id="llmModel" placeholder="google/gemma-2-9b-it:free" spellcheck="false">
+            <input type="text" id="llmModel" placeholder="openrouter/free" spellcheck="false">
           </label>
           <label>
             API key
@@ -65,15 +71,17 @@
           <button type="button" id="btnLlmTest">Test connection</button>
           <span id="llmSettingsStatus" class="inline-status"></span>
         </div>
-        <p class="hint">Key stays in browser storage only. Default: OpenRouter + Gemma 2 9B free.</p>
+        <p class="hint">Key stays in browser storage only. Default: OpenRouter <code>openrouter/free</code>.</p>
       </div>
     </details>
 
   <section class="flow" aria-label="Induction workflow">
     <p class="flow-intro">
-      Follow the arrows: <strong>ground</strong> facts and examples with the LLM,
+      This is the interactive app from
+      <a href="https://adamrybinski.com/blog/liveknowledge-part2/">LiveKnowledge Part 2</a>.
+      <strong>Ground</strong> facts and examples with the LLM,
       <strong>review</strong> and give feedback, then <strong>induce</strong> a rule with Clingo + Trealla.
-      Loop back anytime to refine or add examples.
+      New here? Start with <a href="https://adamrybinski.com/blog/liveknowledge/">Part 1 — architecture</a>.
     </p>
 
     <!-- STEP 1: SOURCE -->
@@ -263,9 +271,12 @@
 
   <footer>
     <p>
-      <strong>Induction:</strong> Popper <code>alan.pl</code> + Clingo WASM + Trealla.
-      <strong>LLM:</strong> OpenAI-compatible API (LiveKnowledge-style verify on extract).
-      Human-in-the-loop: refine → validate → induce → pin → repeat.
+      <a href="https://adamrybinski.com/blog/liveknowledge/">LiveKnowledge Part 1</a>
+      ·
+      <a href="https://adamrybinski.com/blog/liveknowledge-part2/">Part 2</a>
+      ·
+      <a href="https://github.com/adamrybinski/webilp">source on GitHub</a>.
+      Popper <code>alan.pl</code> + Clingo WASM + Trealla; LLM key stays in your browser.
     </p>
   </footer>
 

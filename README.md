@@ -53,7 +53,7 @@ Configure **LLM settings** at the top of the page:
 
 | Preset | Base URL | Model |
 |--------|----------|-------|
-| OpenRouter free (default) | `https://openrouter.ai/api/v1` | `openrouter/free` |
+| OpenRouter free router (default) | `https://openrouter.ai/api/v1` | `openrouter/free` |
 | OpenRouter Gemma free | same | `google/gemma-2-9b-it:free` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
 | Custom | your gateway | your model slug |
