@@ -22,7 +22,8 @@ import {
 } from './assist.js';
 
 
-const CLINGO_WASM = 'https://cdn.jsdelivr.net/npm/clingo-wasm@0.3.2/dist/clingo.wasm';
+const CLINGO_WASM = 'vendor/clingo-wasm/clingo.wasm';
+const INIT_TIMEOUT_MS = 120_000;
 
 const $ = (id) => document.getElementById(id);
 
@@ -541,12 +542,22 @@ function bindFileInput(inputId, textareaId) {
 }
 
 async function initRuntimes() {
+  if (typeof globalThis.clingo === 'undefined') {
+    throw new Error(
+      'Clingo failed to load (vendor/clingo-wasm/clingo.web.js). Hard-refresh the page.',
+    );
+  }
+
   setStatus('Loading Clingo WASM…');
-  await clingo.init(CLINGO_WASM);
+  await withTimeout(
+    clingo.init(CLINGO_WASM),
+    INIT_TIMEOUT_MS,
+    'Clingo WASM timed out — check network or try again.',
+  );
   state.clingoReady = true;
 
   setStatus('Loading Trealla Prolog…');
-  await load;
+  await withTimeout(load, INIT_TIMEOUT_MS, 'Trealla timed out loading.');
   state.treallaReady = true;
 
   const [alanPlain, alanOld] = await Promise.all([
@@ -557,6 +568,16 @@ async function initRuntimes() {
   state.alanOld = alanOld;
 
   setStatus('Ready — paste source text or load an example, then follow the flow.', 'ok');
+}
+
+/** @param {Promise<unknown>} promise @param {number} ms @param {string} message */
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms);
+    }),
+  ]);
 }
 
 async function clingoRun(program, models, options = []) {
@@ -758,4 +779,5 @@ function wireUI() {
 }
 
 wireUI();
+setStatus('Loading runtimes…');
 initRuntimes().catch((e) => setStatus(`Init failed: ${e.message}`, 'error'));

@@ -1,2 +1,2 @@
-/** Browser-safe Trealla entry (bare `trealla` only resolves in Node). */
-export { load, Prolog } from 'https://cdn.jsdelivr.net/npm/trealla/+esm';
+/** Browser-safe Trealla entry — vendored (no CDN). */
+export { load, Prolog } from '../vendor/trealla/trealla.js';
