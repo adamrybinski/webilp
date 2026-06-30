@@ -1,4 +1,5 @@
-import { validateConfig } from './llm-settings.js';
+import { validateConfig, usesCloudflareAi } from './llm-settings.js';
+import { getSessionId } from './session.js';
 
 /**
  * Pull assistant text from OpenAI-compatible chat response.
@@ -84,15 +85,20 @@ export async function chatCompletion(config, {
 }) {
   validateConfig(config);
 
-  const base = config.baseUrl.replace(/\/$/, '');
-  const url = `${base}/chat/completions`;
+  const useCf = usesCloudflareAi(config);
+  const base = useCf ? '/api' : config.baseUrl.replace(/\/$/, '');
+  const url = useCf ? `${base}/chat` : `${base}/chat/completions`;
 
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${config.apiKey}`,
-  };
+  /** @type {Record<string, string>} */
+  const headers = { 'Content-Type': 'application/json' };
 
-  const isOpenRouter = base.includes('openrouter.ai');
+  if (useCf) {
+    headers['X-WebILP-Session'] = getSessionId();
+  } else {
+    headers.Authorization = `Bearer ${config.apiKey}`;
+  }
+
+  const isOpenRouter = !useCf && base.includes('openrouter.ai');
   if (isOpenRouter) {
     headers['HTTP-Referer'] = window.location.origin || 'http://localhost';
     headers['X-Title'] = 'WebILP';
@@ -100,7 +106,6 @@ export async function chatCompletion(config, {
 
   /** @type {Record<string, unknown>} */
   const body = {
-    model: config.model,
     messages: [
       { role: 'system', content: system },
       { role: 'user', content: user },
@@ -109,7 +114,11 @@ export async function chatCompletion(config, {
     max_tokens: maxTokens,
   };
 
-  if (jsonMode) {
+  if (!useCf) {
+    body.model = config.model;
+  }
+
+  if (jsonMode && !useCf) {
     body.response_format = { type: 'json_object' };
   }
 
@@ -128,7 +137,9 @@ export async function chatCompletion(config, {
     });
   } catch (e) {
     throw new Error(
-      `Network error calling ${url}: ${e.message}. Check CORS — use OpenRouter or an API that allows browser requests.`,
+      useCf
+        ? `Network error calling ${url}: ${e.message}. Run \`npm run dev\` for local Workers AI, or deploy to Cloudflare Pages.`
+        : `Network error calling ${url}: ${e.message}. Check CORS — use OpenRouter or an API that allows browser requests.`,
     );
   }
 
@@ -144,6 +155,11 @@ export async function chatCompletion(config, {
 
   if (!response.ok) {
     const msg = data?.error?.message ?? data?.message ?? rawText.slice(0, 300);
+    if (response.status === 429 && data?.error?.code === 'session_limit') {
+      throw new Error(
+        `${msg} (${data?.error?.used ?? '?'}/${data?.error?.limit ?? '?'} used this session)`,
+      );
+    }
     throw new Error(`LLM ${response.status}: ${msg}`);
   }
 

@@ -10,7 +10,9 @@ import {
   saveLlmConfig,
   configFromPreset,
   presetById,
+  usesCloudflareAi,
 } from './llm-settings.js';
+import { getSessionId } from './session.js';
 import { testLlmConnection } from './llm.js';
 import {
   draftPopperLayer,
@@ -129,6 +131,9 @@ async function runWithBusy(label, kind, fn) {
     return await fn(setBusyPhase);
   } finally {
     endBusy(token);
+    if (kind === 'llm' && usesCloudflareAi(loadLlmConfig())) {
+      refreshSessionQuota();
+    }
   }
 }
 
@@ -267,15 +272,54 @@ function populateLlmForm(config) {
   $('llmBaseUrl').value = config.baseUrl ?? preset?.baseUrl ?? '';
   $('llmModel').value = config.model ?? preset?.model ?? '';
   $('llmApiKey').value = config.apiKey ?? '';
+  updateLlmFormForPreset(presetId);
+}
+
+function updateLlmFormForPreset(presetId) {
+  const isCf = presetId === 'cloudflare_ai';
+  const keyInput = $('llmApiKey');
+  const baseInput = $('llmBaseUrl');
+  const modelInput = $('llmModel');
+  const quotaEl = $('llmSessionQuota');
+
+  keyInput.disabled = isCf;
+  keyInput.placeholder = isCf ? 'Not needed — Cloudflare AI' : 'sk-or-…';
+  baseInput.readOnly = isCf;
+  modelInput.readOnly = isCf;
+
+  if (quotaEl) {
+    quotaEl.hidden = !isCf;
+    if (isCf) refreshSessionQuota();
+  }
+}
+
+async function refreshSessionQuota() {
+  const el = $('llmSessionQuota');
+  if (!el) return;
+  try {
+    const res = await fetch('/api/usage', {
+      headers: { 'X-WebILP-Session': getSessionId() },
+    });
+    if (!res.ok) {
+      el.textContent = 'Session quota: unavailable (deploy or run npm run dev)';
+      return;
+    }
+    const data = await res.json();
+    el.textContent = `Session quota: ${data.used}/${data.limit} LLM requests used (${data.remaining} left)`;
+  } catch {
+    el.textContent = 'Session quota: unavailable offline';
+  }
 }
 
 function wireLlmSettings() {
   populateLlmForm(loadLlmConfig());
 
   $('llmPreset').addEventListener('change', (e) => {
-    const patch = configFromPreset(e.target.value);
+    const presetId = e.target.value;
+    const patch = configFromPreset(presetId);
     if (patch.baseUrl) $('llmBaseUrl').value = patch.baseUrl;
     if (patch.model) $('llmModel').value = patch.model;
+    updateLlmFormForPreset(presetId);
   });
 
   $('btnLlmSave').addEventListener('click', () => {

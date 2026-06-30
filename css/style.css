@@ -51,6 +51,17 @@ header h1 {
   text-decoration: underline;
 }
 
+.optional-tag {
+  font-size: 0.75rem;
+  font-weight: normal;
+  color: var(--muted);
+}
+
+.session-quota {
+  margin-top: 0.35rem;
+  color: var(--accent);
+}
+
 #status {
   padding: 0.5rem 0.75rem;
   border-radius: 6px;

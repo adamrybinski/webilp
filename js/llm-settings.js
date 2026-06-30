@@ -1,19 +1,28 @@
-/** @typedef {{ id: string, label: string, baseUrl: string, model: string, helpUrl?: string }} LlmPreset */
+/** @typedef {{ id: string, label: string, baseUrl: string, model: string, helpUrl?: string, requiresKey?: boolean }} LlmPreset */
 
 export const LLM_PRESETS = /** @type {LlmPreset[]} */ ([
   {
+    id: 'cloudflare_ai',
+    label: 'Cloudflare AI (default, no key)',
+    baseUrl: '/api',
+    model: '@cf/meta/llama-3.1-8b-instruct',
+    requiresKey: false,
+  },
+  {
     id: 'openrouter_free',
-    label: 'OpenRouter — free router',
+    label: 'OpenRouter — free router (your key)',
     baseUrl: 'https://openrouter.ai/api/v1',
     model: 'openrouter/free',
     helpUrl: 'https://openrouter.ai/keys',
+    requiresKey: true,
   },
   {
     id: 'openrouter_gemma',
-    label: 'OpenRouter — Gemma 2 9B (free)',
+    label: 'OpenRouter — Gemma 2 9B (your key)',
     baseUrl: 'https://openrouter.ai/api/v1',
     model: 'google/gemma-2-9b-it:free',
     helpUrl: 'https://openrouter.ai/keys',
+    requiresKey: true,
   },
   {
     id: 'openai',
@@ -21,17 +30,19 @@ export const LLM_PRESETS = /** @type {LlmPreset[]} */ ([
     baseUrl: 'https://api.openai.com/v1',
     model: 'gpt-4o-mini',
     helpUrl: 'https://platform.openai.com/api-keys',
+    requiresKey: true,
   },
   {
     id: 'custom',
     label: 'Custom (OpenAI-compatible)',
     baseUrl: '',
     model: '',
+    requiresKey: true,
   },
 ]);
 
 const STORAGE_KEY = 'webilp_llm_config';
-const CONFIG_VERSION = 2;
+const CONFIG_VERSION = 3;
 
 /** @typedef {{ presetId: string, baseUrl: string, model: string, apiKey: string, configVersion?: number }} LlmConfig */
 
@@ -47,6 +58,18 @@ export function defaultConfig() {
   };
 }
 
+/** @param {LlmConfig} config */
+export function usesCloudflareAi(config) {
+  return config.presetId === 'cloudflare_ai' || config.baseUrl?.replace(/\/$/, '') === '/api';
+}
+
+/** @param {LlmConfig} config */
+export function requiresApiKey(config) {
+  if (usesCloudflareAi(config)) return false;
+  const preset = presetById(config.presetId);
+  return preset?.requiresKey !== false;
+}
+
 /** @returns {LlmConfig} */
 export function loadLlmConfig() {
   try {
@@ -55,13 +78,15 @@ export function loadLlmConfig() {
     const parsed = JSON.parse(raw);
     const config = { ...defaultConfig(), ...parsed };
 
-    // One-time: old builds defaulted to Gemma; switch to openrouter/free.
     if ((config.configVersion ?? 1) < CONFIG_VERSION) {
-      if (config.presetId === 'openrouter_gemma') {
-        const free = LLM_PRESETS[0];
-        config.presetId = free.id;
-        config.baseUrl = free.baseUrl;
-        config.model = free.model;
+      // v2 default: Cloudflare AI unless user already saved a BYOK key.
+      if (!config.apiKey?.trim()) {
+        const cf = presetById('cloudflare_ai');
+        if (cf) {
+          config.presetId = cf.id;
+          config.baseUrl = cf.baseUrl;
+          config.model = cf.model;
+        }
       }
       config.configVersion = CONFIG_VERSION;
       saveLlmConfig(config);
@@ -93,11 +118,13 @@ export function configFromPreset(presetId) {
 
 /** @param {LlmConfig} config */
 export function validateConfig(config) {
-  if (!config.baseUrl?.trim()) throw new Error('Base URL is required.');
-  if (!config.model?.trim()) throw new Error('Model name is required.');
-  if (!config.apiKey?.trim()) {
+  if (!usesCloudflareAi(config)) {
+    if (!config.baseUrl?.trim()) throw new Error('Base URL is required.');
+    if (!config.model?.trim()) throw new Error('Model name is required.');
+  }
+  if (requiresApiKey(config) && !config.apiKey?.trim()) {
     throw new Error(
-      'API key is required. OpenRouter free models still need a key from openrouter.ai/keys.',
+      'API key is required for this preset. Get one at openrouter.ai/keys, or switch to Cloudflare AI (no key).',
     );
   }
 }

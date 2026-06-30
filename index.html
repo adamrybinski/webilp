@@ -55,14 +55,14 @@
           </label>
           <label>
             Base URL
-            <input type="url" id="llmBaseUrl" placeholder="https://openrouter.ai/api/v1" spellcheck="false">
+            <input type="url" id="llmBaseUrl" placeholder="/api" spellcheck="false">
           </label>
           <label>
             Model
-            <input type="text" id="llmModel" placeholder="openrouter/free" spellcheck="false">
+            <input type="text" id="llmModel" placeholder="@cf/meta/llama-3.1-8b-instruct" spellcheck="false">
           </label>
           <label>
-            API key
+            API key <span class="optional-tag">(optional with Cloudflare AI)</span>
             <input type="password" id="llmApiKey" placeholder="sk-or-…" autocomplete="off">
           </label>
         </div>
@@ -71,7 +71,11 @@
           <button type="button" id="btnLlmTest">Test connection</button>
           <span id="llmSettingsStatus" class="inline-status"></span>
         </div>
-        <p class="hint">Key stays in browser storage only. Default: OpenRouter <code>openrouter/free</code>.</p>
+        <p id="llmSessionQuota" class="hint session-quota" hidden>Session quota: …</p>
+        <p class="hint">
+          Default: <strong>Cloudflare AI</strong> (no key, session limit).
+          Or bring your own OpenRouter/OpenAI key below.
+        </p>
       </div>
     </details>
 

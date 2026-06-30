@@ -2,31 +2,38 @@
 
 Browser-based inductive logic programming using Popper's **Alan** ASP encoding, **Clingo WASM**, and **Trealla Prolog**.
 
-## Quick start
+## Branches
+
+| Branch | LLM default | Notes |
+|--------|-------------|-------|
+| `v1` / `master` | OpenRouter (BYOK) | Static Pages only; API key required |
+| `v2` | Cloudflare Workers AI | `/api/chat` proxy, session limit; OpenRouter optional |
+
+## Quick start (v2 — Cloudflare AI)
 
 ```bash
 npm install
+npm run dev
+```
+
+Open the URL `wrangler pages dev` prints (usually http://localhost:8788). **No API key** needed — uses Workers AI via `/api/chat` with a per-browser session limit (30 requests/session by default).
+
+For static-only local preview (no LLM unless you add a key):
+
+```bash
 npm start
 ```
 
-Open http://localhost:3000 (or whatever `serve` prints). Use **Load example → grandparent-maternal**, then **Induce**.
-
-## Deploy (Cloudflare Pages)
-
-Static app — no backend. LLM keys stay in the browser; Clingo WASM and Trealla load from CDN.
+## Deploy (Cloudflare Pages + Workers AI)
 
 ```bash
-# first time only
-wrangler pages project create webilp --production-branch main
-
-# deploy
-wrangler pages deploy . --project-name webilp --branch main
+npm run deploy
 ```
 
 - **Production URL**: https://webilp.pages.dev
-- **Custom domain** (once added in Cloudflare): https://app.livelogic.dev
+- **Custom domain**: https://app.livelogic.dev
 
-`wrangler.toml` and `.assetsignore` are in the repo root. `node_modules/` is not uploaded.
+`wrangler.toml` binds **Workers AI** and a **KV** namespace for session limits. Pages Functions live in `functions/api/`.
 
 ### Custom domain `app.livelogic.dev`
 
@@ -51,16 +58,17 @@ Then in **Workers & Pages → webilp → Custom domains**, confirm `app.livelogi
 
 Configure **LLM settings** at the top of the page:
 
-| Preset | Base URL | Model |
-|--------|----------|-------|
-| OpenRouter free router (default) | `https://openrouter.ai/api/v1` | `openrouter/free` |
-| OpenRouter Gemma free | same | `google/gemma-2-9b-it:free` |
-| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
-| Custom | your gateway | your model slug |
+| Preset | Key required | Endpoint |
+|--------|--------------|----------|
+| Cloudflare AI (default, v2) | no | `/api/chat` (Workers AI, session limit) |
+| OpenRouter free router | yes | `openrouter.ai/api/v1` → `openrouter/free` |
+| OpenRouter Gemma free | yes | same → `google/gemma-2-9b-it:free` |
+| OpenAI | yes | `api.openai.com/v1` |
+| Custom | yes | your gateway |
 
-**Free models:** OpenRouter’s `openrouter/free` router picks a free model automatically. You still need an API key ([openrouter.ai/keys](https://openrouter.ai/keys)) — inference is free, not keyless. OpenRouter supports browser CORS.
+**v2 default:** Cloudflare Workers AI (`@cf/meta/llama-3.1-8b-instruct`) via a Pages Function. Each browser session gets **30 LLM requests** (configurable in `wrangler.toml` as `SESSION_REQUEST_LIMIT`). After that, add your own OpenRouter key or wait for the session to expire (24h).
 
-Settings (including API key) are stored in **localStorage** only — never sent anywhere except your chosen API endpoint.
+**BYOK (v1 style):** OpenRouter/OpenAI keys stay in **localStorage** and go directly to that provider from the browser.
 
 ### Assist actions
 
