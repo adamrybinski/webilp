@@ -5,7 +5,7 @@ export const LLM_PRESETS = /** @type {LlmPreset[]} */ ([
     id: 'cloudflare_ai',
     label: 'Cloudflare AI (default, no key)',
     baseUrl: '/api',
-    model: '@cf/meta/llama-3.1-8b-instruct',
+    model: '@cf/meta/llama-3.1-8b-instruct-fast',
     requiresKey: false,
   },
   {

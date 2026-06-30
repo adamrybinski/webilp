@@ -25,4 +25,4 @@ preview_id = "ead1fc6087744062bfe2282f4e82ebf9"
 
 [vars]
 SESSION_REQUEST_LIMIT = "30"
-CF_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
+CF_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"

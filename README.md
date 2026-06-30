@@ -66,7 +66,7 @@ Configure **LLM settings** at the top of the page:
 | OpenAI | yes | `api.openai.com/v1` |
 | Custom | yes | your gateway |
 
-**v2 default:** Cloudflare Workers AI (`@cf/meta/llama-3.1-8b-instruct`) via a Pages Function. Each browser session gets **30 LLM requests** (configurable in `wrangler.toml` as `SESSION_REQUEST_LIMIT`). After that, add your own OpenRouter key or wait for the session to expire (24h).
+**v2 default:** Cloudflare Workers AI (`@cf/meta/llama-3.1-8b-instruct-fast`) via a Pages Function. Each browser session gets **30 LLM requests** (configurable in `wrangler.toml` as `SESSION_REQUEST_LIMIT`). After that, add your own OpenRouter key or wait for the session to expire (24h).
 
 **BYOK (v1 style):** OpenRouter/OpenAI keys stay in **localStorage** and go directly to that provider from the browser.
 
